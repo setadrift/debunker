@@ -49,7 +49,11 @@ export default function Sidebar() {
     fetchStats();
   }, []);
 
-  const isActive = (path: string) => location.pathname === path;
+  const navItems = [
+    { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/graph', label: 'Network Graph', icon: '🕸️' },
+    { path: '/bias-stats', label: 'Bias Analysis', icon: '⚖️' },
+  ];
 
   return (
     <aside className="sidebar">
@@ -61,35 +65,16 @@ export default function Sidebar() {
           </h2>
           
           <div className="nav-list">
-            <Link
-              to="/"
-              className={`nav-item ${isActive('/') ? 'active' : ''}`}
-            >
-              <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-              </svg>
-              Dashboard
-            </Link>
-            
-            <Link
-              to="/graph"
-              className={`nav-item ${isActive('/graph') ? 'active' : ''}`}
-            >
-              <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Network Graph
-            </Link>
-
-            <Link
-              to="/login"
-              className={`nav-item ${isActive('/login') ? 'active' : ''}`}
-            >
-              <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-              Login
-            </Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+              </Link>
+            ))}
           </div>
         </nav>
 

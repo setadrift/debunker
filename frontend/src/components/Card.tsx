@@ -1,14 +1,13 @@
 import { Link } from "react-router-dom";
+import type { Narrative, Source } from "../types";
 
-type Narrative = {
-  id: number;
-  summary: string;
-  source_count: number;
-  last_seen: string;
-  first_seen: string;
+// Support for both narrative and source cards
+type CardProps = {
+  narrative?: Narrative;
+  source?: Source;
 };
 
-export default function Card({ narrative }: { narrative: Narrative }) {
+export default function Card({ narrative, source }: CardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -19,6 +18,7 @@ export default function Card({ narrative }: { narrative: Narrative }) {
   };
 
   const calculateDaysActive = () => {
+    if (!narrative) return 0;
     const first = new Date(narrative.first_seen);
     const last = new Date(narrative.last_seen);
     const diffTime = Math.abs(last.getTime() - first.getTime());
@@ -27,6 +27,7 @@ export default function Card({ narrative }: { narrative: Narrative }) {
   };
 
   const getTrendIndicator = () => {
+    if (!narrative) return { label: 'Unknown', style: 'badge-gray', icon: '❓' };
     const hoursAgo = (Date.now() - new Date(narrative.last_seen).getTime()) / (1000 * 60 * 60);
     
     if (hoursAgo < 2) {
@@ -56,6 +57,62 @@ export default function Card({ narrative }: { narrative: Narrative }) {
     }
   };
 
+  // If rendering a source card
+  if (source) {
+    return (
+      <div className="card hover-lift card-p-6">
+        {/* Source Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-600">{source.platform}</span>
+            {source.bias && (
+              <span
+                className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold
+                  ${
+                    {
+                      left: 'bg-red-500/20 text-red-700',
+                      right: 'bg-blue-500/20 text-blue-700', 
+                      center: 'bg-gray-500/20 text-gray-700',
+                      unknown: 'bg-slate-400/20 text-slate-700',
+                    }[source.bias.bias_label]
+                  }`}
+                title={`Rated ${source.bias.bias_label} (${source.bias.bias_score.toFixed(2)})`}
+              >
+                {source.bias.bias_label}
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-gray-500">
+            {new Date(source.timestamp).toLocaleDateString()}
+          </div>
+        </div>
+
+        {/* Source Content */}
+        <div className="mb-4">
+          <p className="text-gray-800">{source.text_excerpt}</p>
+        </div>
+
+        {/* Source Action */}
+        <div className="flex justify-between items-center">
+          <a 
+            href={source.url} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-500 hover:underline text-sm"
+          >
+            View Source
+          </a>
+          <div className="text-xs text-gray-400">
+            Engagement: {source.engagement}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Original narrative card logic
+  if (!narrative) return null;
+  
   const trend = getTrendIndicator();
   const daysActive = calculateDaysActive();
 

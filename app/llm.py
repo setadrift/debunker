@@ -25,7 +25,7 @@ def get_client() -> Anthropic:
 
 
 def chat(
-    messages: list[dict[str, str]],
+    messages: list,
     model: str = "claude-3-haiku-20240307",  # adjust to your plan
     temperature: float = 0.7,
     max_tokens: int = 1024,

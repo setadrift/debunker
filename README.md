@@ -4,16 +4,19 @@ A comprehensive web application for analyzing conflicting narratives across news
 
 ## 🚀 Current Status
 
-✅ **Modern Frontend** - React/Vite with clean, minimalist design system  
-✅ **Backend API** - FastAPI with PostgreSQL database and JWT authentication  
+✅ **Modern Frontend** - React 19/Vite with Zustand state management and React Router  
+✅ **Backend API** - FastAPI with PostgreSQL, JWT authentication, Redis caching & rate limiting  
 ✅ **Docker Deployment** - Full containerization with docker-compose  
 ✅ **Real-Time Data** - Live ingestion from news, social media, and video platforms  
 ✅ **AI-Powered Analysis** - Anthropic Claude for narrative summarization and conflict detection  
 ✅ **Interactive Visualizations** - Network graphs and timeline charts  
 ✅ **Background Processing** - Celery with Redis for async data processing  
-✅ **Authentication System** - Secure user management with superuser controls  
+✅ **Authentication System** - Secure user management with route guards and superuser controls  
+✅ **Performance Optimization** - Redis caching and API rate limiting for production scalability  
 ✅ **Multi-Platform Scrapers** - Twitter/X, Reddit, YouTube, and RSS feeds  
 ✅ **Production Ready** - CI/CD pipeline, code quality checks, and monitoring  
+✅ **Enhanced Bias Analysis** - Multi-dimensional bias detection with LLM-powered alternative perspectives  
+✅ **Academic Source Integration** - Fact-checking against historical texts and research papers  
 🔄 **Active Development** - Enhanced conflict analysis and user customization
 
 ## ✨ Key Features
@@ -24,155 +27,187 @@ A comprehensive web application for analyzing conflicting narratives across news
 - **Real-Time Processing** - Continuous ingestion and analysis pipeline
 - **Source Attribution** - Complete tracking of content origin and engagement metrics
 
+### ⚖️ Enhanced Bias Analysis System
+- **Multi-Dimensional Bias Detection** - Political bias, factual accuracy, emotional tone, and sensationalism scoring
+- **LLM-Powered Analysis** - Claude Sonnet for comprehensive bias assessment and blind spot identification
+- **Alternative Perspective Generation** - AI-generated counter-narratives and missing context
+- **Academic Source Integration** - Fact-checking against historical documents and research papers
+- **Real-Time Bias Scoring** - Automated bias classification for incoming sources
+- **Comprehensive Reporting** - Detailed bias analysis reports with confidence scores
+
+### 📚 Academic Reference System
+- **Historical Document Database** - Curated collection of academic papers and historical texts
+- **Fact-Checking Pipeline** - Automated verification against authoritative sources
+- **Source Credibility Scoring** - Multi-factor credibility assessment
+- **Citation Tracking** - Academic source citation counts and impact metrics
+
 ### 🎨 Modern User Interface
 - **Clean Design System** - Minimalist, professional interface prioritizing usability
-- **Interactive Dashboards** - Real-time metrics and system status indicators
-- **Network Visualizations** - Interactive force-directed graphs showing source relationships
-- **Timeline Analysis** - Visual representation of narrative evolution over time
-- **Responsive Design** - Optimized for desktop and mobile viewing
+- **Interactive Bias Visualization** - Real-time bias metrics and trend analysis
+- **Alternative Perspective Display** - Side-by-side comparison of different viewpoints
+- **Fact-Check Integration** - Inline fact-checking results with academic source citations
+- **Responsive Design** - Optimized for desktop, tablet, and mobile devices
 
-### 🔐 Enterprise Authentication
-- **JWT-Based Security** - Secure token authentication with role-based access
-- **User Management** - Registration, login, and persistent sessions
-- **Superuser Controls** - Administrative access for data refresh and system management
-- **Route Protection** - Secure access to sensitive features and data
+## 🔧 Enhanced Bias Analysis Features
 
-## 🐳 Quick Start with Docker
+### Political Bias Detection
+- **Spectrum Analysis** - -1.0 (left) to 1.0 (right) political bias scoring
+- **Language Pattern Recognition** - Identification of loaded language and political framing
+- **Source Positioning** - Automatic classification of news sources on political spectrum
 
-### One-Command Deployment
+### Factual Accuracy Assessment
+- **Truth Verification** - Cross-referencing claims against academic sources
+- **Evidence Scoring** - 0.0 to 1.0 factual accuracy rating
+- **Context Provision** - Missing context identification and supplementation
 
+### Emotional Analysis
+- **Tone Detection** - Emotional tone analysis from negative to positive
+- **Sensationalism Scoring** - Detection of inflammatory or sensationalized content
+- **Manipulation Identification** - Recognition of emotional manipulation techniques
+
+### Alternative Perspective Generation
+- **Counter-Narrative Creation** - AI-generated opposing viewpoints
+- **Missing Context Addition** - Historical and political context supplementation
+- **Blind Spot Identification** - Recognition of perspective gaps and omissions
+- **Academic Source Integration** - Alternative perspectives backed by scholarly research
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Python 3.8+
+- Node.js 18+
+- PostgreSQL
+- Redis
+- Docker & Docker Compose
+
+### Quick Start with Docker
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd ii
 
-# Copy and configure environment
+# Set up environment variables
 cp env.example .env
 # Edit .env with your API keys and database credentials
 
+# Load sample academic sources
+python -m app.etl.academic_loader data/academic_sources_sample.csv
+
 # Start all services
-docker compose up -d
+docker-compose up -d
 
-# Check status
-docker compose ps
+# Run database migrations
+docker-compose exec api alembic upgrade head
+
+# Load sample bias data (optional)
+docker-compose exec api python -m app.etl.load_bias data/bias_ratings.csv
 ```
 
-**Available Services:**
-- **Frontend:** http://localhost:5173 - Modern React application
-- **API:** http://localhost:8000 - FastAPI backend with documentation
-- **API Docs:** http://localhost:8000/docs - Interactive API documentation
-- **Database:** PostgreSQL with persistent storage
-- **Redis:** Task queue and session management
-- **Celery Worker:** Background data processing
+### Enhanced Bias Analysis Setup
 
-### Development Environment
-
+1. **Load Academic Sources**
 ```bash
-# Start development stack with hot reloading
-docker compose -f docker-compose.dev.yml up -d
-
-# Apply database migrations
-docker compose exec api alembic upgrade head
-
-# Create superuser
-docker compose exec api python -c "
-from app.auth import create_superuser
-import asyncio
-asyncio.run(create_superuser('admin@example.com', 'secure_password'))
-"
-
-# View logs
-docker compose logs -f api
-docker compose logs -f frontend
+# Load historical documents and research papers
+python -m app.etl.academic_loader data/academic_sources_sample.csv
 ```
 
-## 🔧 Configuration & Environment
-
-### Required Environment Variables
+2. **Configure Claude API**
 ```bash
-# Database Configuration
-DATABASE_URL=postgresql+asyncpg://user:password@host:port/database
-
-# Authentication Security
-SECRET=your-jwt-secret-key-minimum-32-characters
-
-# AI Integration
-ANTHROPIC_API_KEY=sk-ant-your-api-key
-
-# Task Queue
-REDIS_URL=redis://localhost:6379/0
-
-# Optional: Social Media APIs
-REDDIT_CLIENT_ID=your_reddit_client_id
-REDDIT_CLIENT_SECRET=your_reddit_client_secret
-YOUTUBE_API_KEY=your_youtube_api_key
+# Add to your .env file
+ANTHROPIC_API_KEY=your_claude_api_key_here
 ```
 
-## 📡 API Documentation
-
-### Core Endpoints
-
-**Narratives & Analysis:**
+3. **Start Bias Analysis**
 ```bash
-GET  /api/narratives/          # Active narrative clusters with summaries
-GET  /api/narratives/timeline  # Timeline data for visualization
-GET  /api/graph/              # Network graph nodes and relationships
+# Trigger batch analysis of existing sources
+curl -X POST "http://localhost:8000/api/bias/analyze/batch?limit=50"
+
+# Analyze a specific source
+curl -X POST "http://localhost:8000/api/bias/sources/{source_id}/analyze"
 ```
 
-**Authentication:**
-```bash
-POST /auth/jwt/login           # User authentication
-POST /auth/jwt/logout          # Session termination
-POST /auth/jwt/register        # New user registration
-GET  /auth/jwt/me             # Current user information
-```
+4. **View Bias Analysis**
+Navigate to `/bias/{source_id}` in the frontend to see comprehensive bias analysis including:
+- Multi-dimensional bias metrics
+- Alternative perspectives
+- Fact-check results
+- Academic source citations
 
-**Administrative:**
-```bash
-POST /api/refresh             # Trigger background data processing (superuser)
-GET  /health                  # System health and status
-```
+### API Endpoints
 
-## 🏗️ Technical Architecture
+#### Bias Analysis
+- `GET /api/bias/sources/{id}/bias-analysis` - Get comprehensive bias analysis
+- `POST /api/bias/sources/{id}/analyze` - Trigger bias analysis for source
+- `POST /api/bias/analyze/batch` - Batch analyze multiple sources
+- `GET /api/bias/bias-stats` - System-wide bias statistics
+- `GET /api/bias/alternative-perspectives` - Recent alternative perspectives
 
-### Core Technologies
-- **Backend:** FastAPI with async/await, SQLAlchemy ORM, Alembic migrations
-- **Frontend:** React 18 + Vite, modern CSS with custom design system, React Router
-- **Database:** PostgreSQL with optimized indexing and query performance
-- **Caching:** Redis for session management and task queue coordination
-- **AI Integration:** Anthropic Claude for natural language processing and analysis
-- **Authentication:** FastAPI Users with bcrypt password hashing and JWT tokens
+#### Academic Sources
+- Academic source loading via ETL: `python -m app.etl.academic_loader <csv_file>`
+- Fact-checking integration in bias analysis pipeline
 
-### Data Processing Pipeline
-- **NLP Stack:** sentence-transformers, HDBSCAN clustering, scikit-learn
-- **Background Tasks:** Celery for distributed task processing
-- **Real-Time Updates:** WebSocket support for live data feeds
-- **Monitoring:** Comprehensive logging and health check endpoints
+## 📊 Bias Analysis Workflow
 
-### Architecture Overview
-```
-ii/
-├── app/                     # Backend FastAPI application
-│   ├── api/                # REST API endpoints and routing
-│   ├── auth.py             # Authentication and user management
-│   ├── models.py           # Database models and schemas
-│   ├── scrapers/           # Multi-platform data collection
-│   ├── nlp/                # Natural language processing
-│   ├── tasks.py            # Celery background tasks
-│   └── worker.py           # Task queue worker configuration
-├── frontend/               # React frontend application
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Application pages and routing
-│   │   ├── stores/         # Zustand state management
-│   │   └── hooks/          # Custom React hooks
-│   ├── public/             # Static assets
-│   └── package.json        # Node.js dependencies
-├── migrations/             # Database migration files
-├── docker-compose.yml      # Production Docker configuration
-├── docker-compose.dev.yml  # Development Docker configuration
-├── Dockerfile              # Backend container definition
-└── requirements.txt        # Python dependencies
-```
+1. **Source Ingestion** - News articles collected from RSS feeds and social media
+2. **Initial Processing** - Text analysis and embedding generation
+3. **Bias Detection** - Multi-dimensional bias analysis using Claude
+4. **Academic Cross-Reference** - Fact-checking against historical sources
+5. **Alternative Generation** - AI-powered counter-narrative creation
+6. **Visualization** - Interactive bias metrics and perspective comparison
 
-Built with ❤️ for understanding complex geopolitical narratives through data-driven analysis.
+## 🎯 Use Cases
+
+### For Researchers
+- **Academic Fact-Checking** - Verify news claims against scholarly sources
+- **Bias Pattern Analysis** - Study bias trends across different media outlets
+- **Alternative Perspective Research** - Access AI-generated counter-narratives
+- **Historical Context Integration** - Connect current events to historical precedents
+
+### For Journalists
+- **Source Verification** - Check factual accuracy of claims
+- **Perspective Balancing** - Access alternative viewpoints for balanced reporting
+- **Bias Awareness** - Understand potential biases in source material
+- **Context Enhancement** - Add historical context to current reporting
+
+### For Analysts
+- **Media Monitoring** - Track bias trends across news sources
+- **Narrative Analysis** - Understand competing narratives and their evolution
+- **Source Credibility Assessment** - Evaluate reliability of information sources
+- **Conflict Analysis** - Analyze information warfare and narrative conflicts
+
+## 📈 Recent Updates
+
+### Enhanced Bias Analysis (Latest)
+- **Multi-dimensional bias scoring** with political, factual, emotional, and sensationalism metrics
+- **LLM-powered alternative perspective generation** using Claude Sonnet
+- **Academic source integration** for fact-checking and historical context
+- **Comprehensive bias reporting** with confidence scores and evidence
+- **Real-time bias analysis pipeline** for incoming sources
+
+### Previous Updates
+- Modern React 19 frontend with improved UX
+- Enhanced API with Redis caching and rate limiting
+- Comprehensive authentication system
+- Multi-platform data ingestion
+- Interactive network visualizations
+
+## 🔮 Roadmap
+
+- **Advanced Bias Detection** - Integration with additional bias detection models
+- **Enhanced Academic Integration** - Expanded academic source database
+- **Real-time Fact-Checking** - Live fact-checking during news ingestion
+- **Bias Trend Analysis** - Historical bias pattern analysis and prediction
+- **Export Capabilities** - PDF reports and data export functionality
+- **API Rate Limiting** - Enhanced API security and usage controls
+
+## 🛡️ Technical Architecture
+
+- **Backend**: FastAPI, PostgreSQL, Redis, Celery
+- **Frontend**: React 19, TypeScript, Vite, TailwindCSS
+- **AI/ML**: Anthropic Claude, SentenceTransformers, HDBSCAN
+- **Infrastructure**: Docker, Docker Compose, Alembic migrations
+- **Data Sources**: RSS feeds, academic papers, historical documents
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

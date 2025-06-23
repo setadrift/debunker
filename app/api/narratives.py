@@ -1,13 +1,16 @@
 from datetime import date, datetime
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from pydantic import BaseModel
 from sqlalchemy import Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.db import get_session
-from app.models import Embedding, Narrative, Source, cluster_sources
+from app.models import (Embedding, Narrative, Source, SourceBias,
+                        SourceBiasOut, SourceOut, cluster_sources)
 
 router = APIRouter()
 
@@ -18,15 +21,7 @@ class NarrativeResponse(BaseModel):
     first_seen: datetime
     last_seen: datetime
     source_count: int
-
-
-class SourceDetail(BaseModel):
-    id: int
-    platform: str
-    text_excerpt: str
-    timestamp: datetime
-    url: str
-    engagement: int
+    cluster_bias_avg: Optional[float]
 
 
 class TimelineEvent(BaseModel):
@@ -36,11 +31,13 @@ class TimelineEvent(BaseModel):
 
 class NarrativeDetailResponse(BaseModel):
     summary: str
-    sources: List[SourceDetail]
+    sources: List[SourceOut]
     timeline: List[TimelineEvent]
+    cluster_bias_avg: Optional[float]
 
 
 @router.get("/narratives")
+@cache(expire=60)
 async def list_narratives(
     session: AsyncSession = Depends(get_session),
 ) -> List[NarrativeResponse]:
@@ -51,11 +48,21 @@ async def list_narratives(
             func.min(Source.created_at).label("first_seen"),
             func.max(Source.created_at).label("last_seen"),
             func.count(Source.id).label("source_count"),
+            func.round(
+                func.avg(SourceBias.bias_score).filter(
+                    SourceBias.bias_score.is_not(None)
+                ),
+                2,
+            ).label("cluster_bias_avg"),
+            func.count(SourceBias.bias_score.distinct())
+            .filter(SourceBias.bias_score.is_not(None))
+            .label("bias_count"),
         )
         .join(Narrative.cluster)
         .join(cluster_sources, Narrative.cluster_id == cluster_sources.c.cluster_id)
         .join(Embedding, cluster_sources.c.embedding_id == Embedding.id)
         .join(Source, Embedding.source_id == Source.id)
+        .outerjoin(SourceBias, Source.bias_id == SourceBias.id)
         .group_by(Narrative.id)
         .order_by(func.max(Source.created_at).desc())
     )
@@ -67,6 +74,7 @@ async def list_narratives(
             first_seen=row.first_seen,
             last_seen=row.last_seen,
             source_count=row.source_count,
+            cluster_bias_avg=row.cluster_bias_avg if row.bias_count >= 2 else None,
         )
         for row in results
     ]
@@ -82,6 +90,7 @@ async def get_narrative_detail(
 
     sources_stmt = (
         select(Source)
+        .options(selectinload(Source.bias))
         .join(Embedding)
         .join(cluster_sources)
         .where(cluster_sources.c.cluster_id == narrative.cluster_id)
@@ -91,16 +100,25 @@ async def get_narrative_detail(
     sources = sources_result.scalars().all()
 
     source_details = [
-        SourceDetail(
+        SourceOut(
             id=s.id,
             platform=s.platform,
             text_excerpt=s.raw_text[:100],
             timestamp=s.created_at,
             url=s.url,
             engagement=0,
+            bias=SourceBiasOut.model_validate(s.bias) if s.bias else None,
         )
         for s in sources
     ]
+
+    # Calculate cluster bias average
+    bias_scores = [
+        s.bias.bias_score for s in sources if s.bias and s.bias.bias_score is not None
+    ]
+    cluster_bias_avg = None
+    if len(bias_scores) >= 2:
+        cluster_bias_avg = round(sum(bias_scores) / len(bias_scores), 2)
 
     timeline_stmt = (
         select(
@@ -122,4 +140,5 @@ async def get_narrative_detail(
         summary=narrative.summary,
         sources=source_details,
         timeline=timeline_events,
+        cluster_bias_avg=cluster_bias_avg,
     )

@@ -2,10 +2,12 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
+import AuthGuard from "./components/AuthGuard";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import NarrativeDetail from "./pages/NarrativeDetail";
 import GraphPage from './pages/Graph';
+import BiasAnalysis from './pages/BiasAnalysis';
 import './App.css'
 
 function App() {
@@ -21,8 +23,13 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
-                  <Route path="/narratives/:id" element={<NarrativeDetail />} />
+                  <Route path="/narratives/:id" element={
+                    <AuthGuard>
+                      <NarrativeDetail />
+                    </AuthGuard>
+                  } />
                   <Route path="/graph" element={<GraphPage />} />
+                  <Route path="/bias/:sourceId" element={<BiasAnalysis />} />
                 </Routes>
               </div>
             </main>

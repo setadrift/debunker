@@ -1,26 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TimelineChart from "../components/TimelineChart";
-
-type Source = {
-  id: number;
-  platform: string;
-  text_excerpt: string;
-  timestamp: string;
-  url: string;
-  engagement: number;
-};
-
-type TimelineEvent = {
-  date: string;
-  mentions: number;
-};
-
-type NarrativeDetail = {
-  summary: string;
-  sources: Source[];
-  timeline: TimelineEvent[];
-};
+import type { NarrativeDetail } from "../types";
 
 export default function NarrativeDetail() {
   const { id } = useParams<{ id: string }>();

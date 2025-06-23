@@ -21,5 +21,13 @@ services:
     command: celery -A app.worker.celery_app worker -Q default --loglevel=INFO
     env_file: .env
     depends_on: [redis, api]
+  prometheus:
+    image: prom/prometheus
+    volumes: ["./ops/prometheus.yml:/etc/prometheus/prometheus.yml"]
+    ports: ["9090:9090"]
+  grafana:
+    image: grafana/grafana
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
 volumes:
   db_data: 

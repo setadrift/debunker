@@ -4,18 +4,21 @@ import asyncio
 import os
 import pickle
 from typing import Any, Dict, List
+from urllib.parse import urlparse
 
 import hdbscan
 import numpy as np
+from celery.schedules import crontab
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
                                     create_async_engine)
 from sqlalchemy.orm import selectinload
 
-from app.db import get_session
-from app.models import Cluster, Embedding, Narrative, Source
+from app.db import AsyncSessionLocal, get_session
+from app.models import Cluster, Embedding, Narrative, Source, SourceBias
 from app.models import cluster_sources as cluster_sources_table
 from app.nlp.summarise import summarise_clusters
 from app.scraper import collect_latest_news
@@ -673,6 +676,270 @@ async def ingest_all(db: AsyncSession):
     return ingest_all_task.apply_async()
 
 
+@celery_app.task(
+    name="backfill_source_bias",
+    bind=True,
+    autoretry_for=(OperationalError,),
+    max_retries=5,
+)
+def backfill_source_bias(self):
+    """
+    Attach bias_id to existing Source rows by matching domain or source name.
+    Strategy:
+      • SELECT sources WHERE bias_id IS NULL LIMIT 10_000 stream_results=True
+      • For each, look up SourceBias where lower(name) IS substring of source.domain
+      • Batch UPDATE every 1_000 rows
+    """
+
+    async def _task():
+        total_processed = 0
+        total_updated = 0
+        batch_size = 1000
+
+        try:
+            async with AsyncSessionLocal.begin() as session:
+                # Get bias records for matching
+                bias_stmt = select(SourceBias.id, SourceBias.name)
+                bias_result = await session.execute(bias_stmt)
+                bias_records = {row.name.lower(): row.id for row in bias_result}
+
+                if not bias_records:
+                    print("No bias records found. Load bias data first.")
+                    return
+
+                print(f"Found {len(bias_records)} bias records for matching.")
+
+                # Process sources in batches
+                while True:
+                    # Get sources without bias_id
+                    sources_stmt = (
+                        select(Source.id, Source.url, Source.platform)
+                        .where(Source.bias_id.is_(None))
+                        .limit(10000)
+                    )
+
+                    sources_result = await session.execute(sources_stmt)
+                    sources = sources_result.all()
+
+                    if not sources:
+                        print("No more sources to process.")
+                        break
+
+                    print(f"Processing batch of {len(sources)} sources...")
+
+                    # Prepare batch updates
+                    updates_batch = []
+
+                    for source in sources:
+                        total_processed += 1
+                        bias_id = None
+
+                        # Extract domain from URL for matching
+                        try:
+                            parsed_url = urlparse(source.url)
+                            domain = parsed_url.netloc.lower()
+
+                            # Remove www. prefix if present
+                            if domain.startswith("www."):
+                                domain = domain[4:]
+
+                            # Try to match domain with bias names
+                            for bias_name, bias_uuid in bias_records.items():
+                                # Check if bias name is a substring of domain or platform
+                                if (
+                                    bias_name in domain
+                                    or bias_name in source.platform.lower()
+                                    or domain in bias_name
+                                ):
+                                    bias_id = bias_uuid
+                                    break
+
+                        except Exception as e:
+                            print(f"Error processing URL {source.url}: {e}")
+                            continue
+
+                        if bias_id:
+                            updates_batch.append(
+                                {"source_id": source.id, "bias_id": bias_id}
+                            )
+
+                    # Perform batch update
+                    if updates_batch:
+                        update_stmt = text(
+                            """
+                            UPDATE sources
+                            SET bias_id = :bias_id
+                            WHERE id = :source_id
+                        """
+                        )
+
+                        await session.execute(update_stmt, updates_batch)
+                        total_updated += len(updates_batch)
+
+                        print(f"Updated {len(updates_batch)} sources in this batch.")
+
+                        # Commit every 1000 updates
+                        if len(updates_batch) >= batch_size:
+                            await session.commit()
+                            print(f"Committed batch. Total updated: {total_updated}")
+
+                    # If we processed less than the limit, we're done
+                    if len(sources) < 10000:
+                        break
+
+                # Final commit
+                await session.commit()
+
+                print(
+                    f"Backfill complete. Processed: {total_processed}, Updated: {total_updated}"
+                )
+
+        except OperationalError as e:
+            print(
+                f"Database error during backfill (attempt {self.request.retries + 1}): {e}"
+            )
+            # Calculate exponential backoff
+            countdown = 60 * pow(2, self.request.retries)
+            raise self.retry(countdown=countdown, exc=e)
+        except Exception as e:
+            print(f"Unexpected error during backfill: {e}")
+            raise
+
+    # Run the async task
+    asyncio.run(_task())
+
+
 async def main():
     """CLI wrapper for pipeline_main_task."""
     return pipeline_main_task.apply_async()
+
+
+# Celery Beat Schedule Configuration
+celery_app.conf.beat_schedule = {
+    "daily-bias-backfill": {
+        "task": "backfill_source_bias",
+        "schedule": crontab(hour=2, minute=0),
+    },
+}
+
+
+@celery_app.task(
+    name="analyze_source_bias", bind=True, autoretry_for=(Exception,), max_retries=3
+)
+def analyze_source_bias_task(self, source_id: int):
+    """
+    Celery task to perform comprehensive bias analysis on a source.
+    """
+
+    async def _task():
+        from app.etl.bias_analyzer import process_source_bias_analysis
+
+        async with AsyncSessionLocal() as session:
+            await process_source_bias_analysis(session, source_id)
+
+    try:
+        asyncio.run(_task())
+        print(f"✅ Completed bias analysis for source {source_id}")
+    except Exception as e:
+        print(f"❌ Failed bias analysis for source {source_id}: {e}")
+        raise
+
+
+@celery_app.task(name="batch_analyze_bias", bind=True)
+def batch_analyze_bias_task(self, limit: int = 20):
+    """
+    Batch analyze multiple sources for bias.
+    """
+
+    async def _task():
+        from app.etl.bias_analyzer import batch_analyze_sources
+
+        await batch_analyze_sources(limit=limit)
+
+    try:
+        asyncio.run(_task())
+        print(f"✅ Completed batch bias analysis (limit: {limit})")
+    except Exception as e:
+        print(f"❌ Failed batch bias analysis: {e}")
+        raise
+
+
+@celery_app.task(name="generate_narrative_alternatives")
+def generate_narrative_alternatives_task(narrative_id: int):
+    """
+    Generate alternative perspectives for a narrative cluster.
+    """
+
+    async def _task():
+        async with AsyncSessionLocal() as session:
+            from app.etl.bias_analyzer import BiasAnalyzer
+            from app.models import (AcademicSource, AlternativePerspective,
+                                    Narrative, Source)
+
+            # Get narrative and its sources
+            narrative = await session.get(Narrative, narrative_id)
+            if not narrative:
+                return
+
+            # Get sources in this narrative cluster
+            sources_stmt = (
+                select(Source)
+                .join(Source.embeddings)
+                .join(cluster_sources_table)
+                .where(cluster_sources_table.c.cluster_id == narrative.cluster_id)
+                .limit(5)
+            )
+            sources = (await session.execute(sources_stmt)).scalars().all()
+
+            if not sources:
+                return
+
+            # Get academic sources for context
+            academic_sources = (
+                (await session.execute(select(AcademicSource).limit(5))).scalars().all()
+            )
+
+            analyzer = BiasAnalyzer()
+
+            # Combine source texts for narrative-level analysis
+            combined_text = "\n\n".join(
+                [f"{s.meta.get('title', '')}: {s.raw_text[:500]}" for s in sources]
+            )
+
+            # Generate narrative-level alternative perspective
+            if academic_sources:
+
+                class MockSource:
+                    def __init__(self, text, meta, platform):
+                        self.raw_text = text
+                        self.meta = meta
+                        self.platform = platform
+
+                mock_source = MockSource(
+                    combined_text, {"title": narrative.summary}, "narrative_cluster"
+                )
+
+                alt_text = await analyzer.generate_alternative_perspective(
+                    mock_source, academic_sources
+                )
+
+                alt_perspective = AlternativePerspective(
+                    narrative_id=narrative.id,
+                    perspective_type="counter_narrative",
+                    perspective_text=alt_text,
+                    supporting_sources=[ac.title for ac in academic_sources],
+                    confidence_score=0.7,
+                    generation_model="claude-3-sonnet-20240229",
+                )
+                session.add(alt_perspective)
+                await session.commit()
+
+                print(
+                    f"✅ Generated alternative perspective for narrative {narrative_id}"
+                )
+
+    try:
+        asyncio.run(_task())
+    except Exception as e:
+        print(f"❌ Failed to generate alternatives for narrative {narrative_id}: {e}")
+        raise
