@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    env_file: .env
+    ports: ["8000:8000"]
+    depends_on: [postgres, redis]
+  frontend:
+    build: ./frontend
+    ports: ["5173:5173"]
+    depends_on: [api]
+  postgres:
+    image: postgres:16
+    env_file: .env
+    volumes: ["db_data:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+  celery:
+    build: .
+    command: celery -A app.worker.celery_app worker -Q default --loglevel=INFO
+    env_file: .env
+    depends_on: [redis, api]
+volumes:
+  db_data: 

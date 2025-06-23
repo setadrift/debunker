@@ -35,4 +35,7 @@ jobs:
         run: pytest -q
 
       - name: Lint with flake8
-        run: flake8 . 
+        run: flake8 .
+
+      - name: Build Compose (backend only)
+        run: docker compose build api 

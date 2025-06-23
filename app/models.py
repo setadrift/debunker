@@ -5,22 +5,9 @@ from typing import List, Optional
 
 from sqlalchemy import (JSON, Column, DateTime, ForeignKey, Index, Integer,
                         LargeBinary, Table, Text, func)
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
-class Base(DeclarativeBase):
-    """Base class for all ORM models."""
-
-    repr_cols: List[str] = []  # subclasses may override
-
-    def __repr__(self) -> str:  # noqa: DunderMethod
-        cols = ", ".join(
-            f"{name}={getattr(self, name)!r}"
-            for name in self.repr_cols
-            if hasattr(self, name)
-        )
-        return f"<{self.__class__.__name__} {cols}>"
-
+from app.db import Base
 
 # Association table for many-to-many relationship between embeddings and clusters
 cluster_sources = Table(
@@ -114,6 +101,9 @@ class Narrative(Base):
 
     repr_cols = ["id", "cluster_id"]
 
+
+# Import User model so Alembic can detect it
+from app.models_user import User  # noqa: F401
 
 # Additional composite / custom indexes
 Index("ix_sources_platform_created_at", Source.platform, Source.created_at)

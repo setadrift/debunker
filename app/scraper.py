@@ -114,4 +114,13 @@ def collect_latest_news() -> List[NewsItem]:
     for feed in RSS_FEEDS:
         scraper = RssScraper(feed)
         all_items.extend(scraper.fetch())
-    return all_items
+
+    # Deduplicate based on URL
+    seen_urls = set()
+    deduplicated_items = []
+    for item in all_items:
+        if item.url not in seen_urls:
+            seen_urls.add(item.url)
+            deduplicated_items.append(item)
+
+    return deduplicated_items

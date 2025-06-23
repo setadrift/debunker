@@ -1,278 +1,178 @@
-# 🛠️ Misinformation Debunker – Iran–Israel Conflict
+# 🛡️ Iran-Israel Narrative Intelligence Platform
 
-## Objective
-
-Build a web-based application that helps **casual readers** explore **conflicting narratives** and see **which sources are promoting each one**, using data from news, social media, and video platforms. The user interface highlights **the top 10 active narratives** and lets users explore them via timeline views, side-by-side claim comparison, and network visualizations of source clusters.
+A comprehensive web application for analyzing conflicting narratives across news, social media, and video platforms in the Iran-Israel conflict. The platform provides real-time narrative detection, source attribution, and interactive visualizations to help users understand how information spreads across different media ecosystems.
 
 ## 🚀 Current Status
 
-✅ **Backend API** - FastAPI with PostgreSQL database  
-✅ **Frontend Interface** - React/Vite with modern UI components  
-✅ **Data Pipeline** - RSS ingestion, embedding generation, clustering  
-✅ **Network Visualization** - Interactive graph showing source relationships  
-✅ **Timeline Charts** - Visual timeline of narrative activity  
-✅ **Narrative Summaries** - AI-powered cluster analysis  
-✅ **Multi-Platform Scrapers** - Twitter, Reddit, YouTube data collection  
-✅ **Real-Time Content** - Live data from social media and video platforms  
-✅ **Transcript Analysis** - YouTube video transcript extraction and keyword analysis  
-🔄 **Active Development** - Expanding narrative detection and conflict analysis
+✅ **Modern Frontend** - React/Vite with clean, minimalist design system  
+✅ **Backend API** - FastAPI with PostgreSQL database and JWT authentication  
+✅ **Docker Deployment** - Full containerization with docker-compose  
+✅ **Real-Time Data** - Live ingestion from news, social media, and video platforms  
+✅ **AI-Powered Analysis** - Anthropic Claude for narrative summarization and conflict detection  
+✅ **Interactive Visualizations** - Network graphs and timeline charts  
+✅ **Background Processing** - Celery with Redis for async data processing  
+✅ **Authentication System** - Secure user management with superuser controls  
+✅ **Multi-Platform Scrapers** - Twitter/X, Reddit, YouTube, and RSS feeds  
+✅ **Production Ready** - CI/CD pipeline, code quality checks, and monitoring  
+🔄 **Active Development** - Enhanced conflict analysis and user customization
 
-## Core Functionality
+## ✨ Key Features
 
-### 1. Narrative Detection
+### 🔍 Narrative Detection & Analysis
+- **Semantic Clustering** - Groups similar claims using advanced text embeddings
+- **AI Summarization** - Claude-powered narrative summaries with conflict identification
+- **Real-Time Processing** - Continuous ingestion and analysis pipeline
+- **Source Attribution** - Complete tracking of content origin and engagement metrics
 
-- Cluster semantically similar claims using **text embeddings**
-- Use **Anthropic Claude** to summarize each cluster into a short narrative label
-- Optionally highlight competing or conflicting clusters (e.g. "Claim A" vs "Claim B")
+### 🎨 Modern User Interface
+- **Clean Design System** - Minimalist, professional interface prioritizing usability
+- **Interactive Dashboards** - Real-time metrics and system status indicators
+- **Network Visualizations** - Interactive force-directed graphs showing source relationships
+- **Timeline Analysis** - Visual representation of narrative evolution over time
+- **Responsive Design** - Optimized for desktop and mobile viewing
 
-### 2. 🔍 Source Attribution
+### 🔐 Enterprise Authentication
+- **JWT-Based Security** - Secure token authentication with role-based access
+- **User Management** - Registration, login, and persistent sessions
+- **Superuser Controls** - Administrative access for data refresh and system management
+- **Route Protection** - Secure access to sensitive features and data
 
-- Track and display:
-    - Source name
-    - Timestamp
-    - Platform (e.g. Reddit, YouTube, etc.)
-    - Country of origin (if derivable)
-    - Confidence/reliability score (simple heuristic for now)
-    - Link to original content
-    - Engagement metrics (likes, retweets, views if available)
+## 🐳 Quick Start with Docker
 
-### 3. 🧱 Homepage
+### One-Command Deployment
 
-- Show **"Top 10 Active Narratives"** ranked by recent activity
-- Each narrative card includes:
-    - Summary (from Claude)
-    - Timeline snippet (e.g. "First seen X, Last seen Y")
-    - Conflicting claim toggle or preview
-    - Total # mentions or sources
-    - "Explore" button → detailed timeline/source view
-
-### 4. 📈 Narrative Explorer
-
-For each narrative:
-
-- Display timeline of claim occurrences
-- Show side-by-side conflicting claims
-- Visualize sources using **network graph** (nodes = source, edges = similarity/cluster)
-- Show all original posts/articles that support the narrative
-
-## 🏗️ Technical Architecture
-
-The application identifies conflicting narratives across news, social media, and video platforms through a multi-stage pipeline that processes raw content into structured narrative clusters. 
-
-### Dependencies
-- **FastAPI** for the web API
-- **Vite + React** for the frontend application  
-- **PostgreSQL** (via Supabase) for data storage
-- **Anthropic Claude** for LLM-powered narrative analysis
-- **NLP Stack**: sentence-transformers, HDBSCAN clustering, scikit-learn for embedding generation and narrative clustering
-- **Visualization**: react-force-graph for network graphs, Chart.js for timeline charts
-- **Scraping**: snscrape for Twitter/X, PRAW for Reddit, YouTube Data API for video content
-- **Transcript Processing**: youtube-transcript-api for extracting video captions and keyword analysis
-
-### Data Sources
-Currently ingesting from multiple platforms:
-
-**News Media (RSS):**
-- **Western Media:** BBC, Reuters, CNN, AP
-- **Middle Eastern Media:** Al Jazeera, Times of Israel, Jerusalem Post, Middle East Eye  
-- **Iranian Media:** Mehr News Agency
-
-**Social Media:**
-- **Twitter/X:** Real-time scraping with search query "Iran Israel since:2025-06-01" (with fallback mock data)
-- **Reddit:** Live posts from r/worldnews and r/MiddleEast with comment extraction
-
-**Video Platforms:**
-- **YouTube:** Video search with transcript extraction and keyword-based excerpt generation
-- **Content Analysis:** 3-sentence excerpts around key terms (Iran, Israel, conflict, diplomacy, nuclear, etc.)
-
-**Fallback Systems:** 
-- Comprehensive mock data generation for development when APIs are unavailable
-- Maintains data structure consistency across all platforms
-
-## Local Development
-
-### 1. Environment Setup
-Create a `.env` file (or copy `env.example`) and add your credentials:
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd ii
+
+# Copy and configure environment
 cp env.example .env
-```
-Your `.env` should contain your Supabase connection string and Anthropic API key:
-```bash
-DATABASE_URL=postgresql+asyncpg://postgres.oqqecohkqkjomxxwypss:<pwd>@aws-0-us-east-1.pooler.supabase.com:6543/postgres
-ANTHROPIC_API_KEY=sk-...
+# Edit .env with your API keys and database credentials
+
+# Start all services
+docker compose up -d
+
+# Check status
+docker compose ps
 ```
 
-### 2. Backend Setup
-Install Python dependencies and set up the database.
+**Available Services:**
+- **Frontend:** http://localhost:5173 - Modern React application
+- **API:** http://localhost:8000 - FastAPI backend with documentation
+- **API Docs:** http://localhost:8000/docs - Interactive API documentation
+- **Database:** PostgreSQL with persistent storage
+- **Redis:** Task queue and session management
+- **Celery Worker:** Background data processing
+
+### Development Environment
+
 ```bash
-# Install Python packages
-pip install -r requirements.txt
+# Start development stack with hot reloading
+docker compose -f docker-compose.dev.yml up -d
 
 # Apply database migrations
-make migrate
+docker compose exec api alembic upgrade head
+
+# Create superuser
+docker compose exec api python -c "
+from app.auth import create_superuser
+import asyncio
+asyncio.run(create_superuser('admin@example.com', 'secure_password'))
+"
+
+# View logs
+docker compose logs -f api
+docker compose logs -f frontend
 ```
 
-To run the backend server:
+## 🔧 Configuration & Environment
+
+### Required Environment Variables
 ```bash
-uvicorn app.main:app --reload
-```
+# Database Configuration
+DATABASE_URL=postgresql+asyncpg://user:password@host:port/database
 
-### 3. Frontend Setup
-Install Node.js dependencies and run the development server.
-```bash
-# Navigate to the frontend directory
-cd frontend
+# Authentication Security
+SECRET=your-jwt-secret-key-minimum-32-characters
 
-# Install dependencies
-npm install
+# AI Integration
+ANTHROPIC_API_KEY=sk-ant-your-api-key
 
-# Run the dev server (usually on http://localhost:5173)
-npm run dev
-```
+# Task Queue
+REDIS_URL=redis://localhost:6379/0
 
-### 4. Data Processing
-To populate the database, run the data ingestion and processing pipelines.
-
-```bash
-# Scrape latest news from RSS feeds
-python -m app.ingest news
-
-# Run individual scrapers
-python app/scrapers/twitter.py   # Twitter/X posts (with fallback)
-python app/scrapers/reddit.py    # Reddit posts from r/worldnews, r/MiddleEast  
-python app/scrapers/youtube.py   # YouTube videos with transcript analysis
-
-# Generate embeddings, cluster sources, and create summaries
-python -m app.pipeline
-```
-
-### 5. API Endpoints
-The backend provides several key endpoints:
-
-```bash
-# Get all narratives with summaries
-GET /api/narratives/
-
-# Get network graph data (nodes and links)
-GET /api/graph/
-
-# Get timeline data for charts
-GET /api/narratives/timeline
-```
-
-### 6. Git Hooks (Recommended)
-Set up automatic formatting and linting before each commit:
-```bash
-pre-commit install
-```
-
-## 🎨 Frontend Features
-
-The React frontend includes several interactive components:
-
-- **Homepage** - Displays top 10 active narratives with summary cards
-- **Network Graph** - Interactive visualization of source relationships using react-force-graph
-- **Timeline Charts** - Visual timeline showing narrative activity over time
-- **Narrative Detail** - Detailed view of individual narratives with sources
-- **Responsive Design** - Modern UI with Tailwind CSS
-
-## 🎯 Next Development Steps
-
-### Immediate Priorities
-- **Enhanced Narrative Detection** - Improve conflicting narrative identification algorithms
-- **Real-time Updates** - WebSocket connections for live data feeds
-- **User Interaction** - Bookmarking, sharing, and advanced narrative filtering
-- **Content Integration** - Unified pipeline for all scraper outputs
-
-### Data Source Expansion
-**Additional News Sources:**
-- Haaretz, Jerusalem Post, Tehran Times
-- Middle East Monitor, Al-Monitor  
-- Iranian state media (IRNA, Tasnim)
-- Israeli media (Channel 12, Ynet)
-
-**Additional Social Media:**
-- Expanded Reddit coverage (r/geopolitics, r/iran, r/israel)
-- Additional YouTube news channels and live streams
-- Enhanced Twitter/X coverage with verified API access
-- Telegram channels (public Iran-Israel discussion groups)
-
-**Technical Improvements:**
-- **Performance** - Database indexing, caching layer
-- **Reliability** - Better error handling, retry mechanisms  
-- **Security** - Input validation, rate limiting
-- **Testing** - Comprehensive test coverage
-
-This diversity is crucial for the clustering algorithm to identify genuinely conflicting narratives rather than variations of the same perspective.
-
-## 🔧 Database Management
-
-### Migrations
-Apply database migrations to set up the schema:
-```bash
-make migrate
-```
-
-Override the default Supabase connection if needed:
-```bash
-export DATABASE_URL="postgresql+asyncpg://<user>:<pwd>@<host>/<db>"
-```
-
-### Environment Variables
-Create a `.env` file with your credentials:
-```bash
-# Database and AI
-DATABASE_URL=postgresql+asyncpg://postgres.oqqecohkqkjomxxwypss:<pwd>@aws-0-us-east-1.pooler.supabase.com:6543/postgres
-ANTHROPIC_API_KEY=sk-...
-
-# Social Media APIs  
+# Optional: Social Media APIs
 REDDIT_CLIENT_ID=your_reddit_client_id
 REDDIT_CLIENT_SECRET=your_reddit_client_secret
-
-# Video Platform APIs
 YOUTUBE_API_KEY=your_youtube_api_key
 ```
 
-**API Setup Guides:**
-- **Reddit**: Create app at https://www.reddit.com/prefs/apps (select "script" type)
-- **YouTube**: Get API key at https://console.developers.google.com/ (enable YouTube Data API v3)
+## 📡 API Documentation
 
-## 🧪 Testing & Quality
+### Core Endpoints
 
-### Code Quality
-- **Pre-commit hooks** - Black formatting, isort, flake8 linting
-- **GitHub Actions** - Automated CI/CD pipeline  
-- **Testing** - pytest test suite
-
-Setup:
+**Narratives & Analysis:**
 ```bash
-pre-commit install
+GET  /api/narratives/          # Active narrative clusters with summaries
+GET  /api/narratives/timeline  # Timeline data for visualization
+GET  /api/graph/              # Network graph nodes and relationships
 ```
 
-### Project Structure
+**Authentication:**
+```bash
+POST /auth/jwt/login           # User authentication
+POST /auth/jwt/logout          # Session termination
+POST /auth/jwt/register        # New user registration
+GET  /auth/jwt/me             # Current user information
+```
+
+**Administrative:**
+```bash
+POST /api/refresh             # Trigger background data processing (superuser)
+GET  /health                  # System health and status
+```
+
+## 🏗️ Technical Architecture
+
+### Core Technologies
+- **Backend:** FastAPI with async/await, SQLAlchemy ORM, Alembic migrations
+- **Frontend:** React 18 + Vite, modern CSS with custom design system, React Router
+- **Database:** PostgreSQL with optimized indexing and query performance
+- **Caching:** Redis for session management and task queue coordination
+- **AI Integration:** Anthropic Claude for natural language processing and analysis
+- **Authentication:** FastAPI Users with bcrypt password hashing and JWT tokens
+
+### Data Processing Pipeline
+- **NLP Stack:** sentence-transformers, HDBSCAN clustering, scikit-learn
+- **Background Tasks:** Celery for distributed task processing
+- **Real-Time Updates:** WebSocket support for live data feeds
+- **Monitoring:** Comprehensive logging and health check endpoints
+
+### Architecture Overview
 ```
 ii/
-├── app/                    # Backend application
-│   ├── api/               # FastAPI routes (narratives, graph endpoints)
-│   ├── scrapers/          # Multi-platform data collection
-│   │   ├── twitter.py     # Twitter/X scraping with snscrape
-│   │   ├── reddit.py      # Reddit scraping with PRAW
-│   │   └── youtube.py     # YouTube video + transcript analysis
-│   ├── nlp/              # NLP processing and summarization
-│   └── *.py              # Core modules (models, pipeline, ingest)
-├── frontend/              # React application
-│   └── src/
-│       ├── components/    # NetworkGraph, TimelineChart, Card components
-│       └── pages/        # Home, Graph, NarrativeDetail pages
-├── migrations/           # Database schema migrations
-└── tests/               # Test suite
+├── app/                     # Backend FastAPI application
+│   ├── api/                # REST API endpoints and routing
+│   ├── auth.py             # Authentication and user management
+│   ├── models.py           # Database models and schemas
+│   ├── scrapers/           # Multi-platform data collection
+│   ├── nlp/                # Natural language processing
+│   ├── tasks.py            # Celery background tasks
+│   └── worker.py           # Task queue worker configuration
+├── frontend/               # React frontend application
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   ├── pages/          # Application pages and routing
+│   │   ├── stores/         # Zustand state management
+│   │   └── hooks/          # Custom React hooks
+│   ├── public/             # Static assets
+│   └── package.json        # Node.js dependencies
+├── migrations/             # Database migration files
+├── docker-compose.yml      # Production Docker configuration
+├── docker-compose.dev.yml  # Development Docker configuration
+├── Dockerfile              # Backend container definition
+└── requirements.txt        # Python dependencies
 ```
 
-### Scraper Capabilities
-
-| Platform | Status | Content Type | Special Features |
-|----------|--------|--------------|------------------|
-| **RSS Feeds** | ✅ Active | News articles | Multi-source aggregation |
-| **Twitter/X** | ✅ Active | Posts/tweets | Engagement metrics, fallback mock data |
-| **Reddit** | ✅ Active | Posts + comments | Subreddit targeting (r/worldnews, r/MiddleEast) |
-| **YouTube** | ✅ Active | Video transcripts | Real-time transcript analysis, keyword excerpts |
+Built with ❤️ for understanding complex geopolitical narratives through data-driven analysis.

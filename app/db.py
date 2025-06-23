@@ -1,14 +1,30 @@
 import os
 import uuid
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List
 
 from dotenv import load_dotenv
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
                                     create_async_engine)
+from sqlalchemy.orm import DeclarativeBase
 
 # Load variables from a local .env if present
 load_dotenv()
+
+
+class Base(DeclarativeBase):
+    """Base class for all ORM models."""
+
+    repr_cols: List[str] = []  # subclasses may override
+
+    def __repr__(self) -> str:  # noqa: DunderMethod
+        cols = ", ".join(
+            f"{name}={getattr(self, name)!r}"
+            for name in self.repr_cols
+            if hasattr(self, name)
+        )
+        return f"<{self.__class__.__name__} {cols}>"
+
 
 # Ensure DATABASE_URL is provided via environment.
 DATABASE_URL = os.getenv("DATABASE_URL")
